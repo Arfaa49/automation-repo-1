@@ -1,16 +1,17 @@
-name: Playwright Tests
+name: Repo1 Playwright Tests
 
 on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:   # <-- MUST for Repo2 trigger
+  workflow_dispatch:   # triggered by Repo2
+    inputs:
+      triggered_by:
+        description: "Triggered from Repo2 workflow"
+        required: false
+        type: string
 
 jobs:
-  test:
-    timeout-minutes: 60
+  simple_tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     steps:
       # 1️⃣ Checkout Repo1 code
@@ -29,14 +30,22 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      # 5️⃣ Run Repo1 Playwright tests
-      - name: Run Playwright tests
+      # 5️⃣ Run Repo1 simple test cases
+      - name: Run Repo1 Simple Tests
         run: npx playwright test
 
-      # 6️⃣ Upload test report
+      # 6️⃣ Log trigger info from Repo2
+      - name: Log Trigger Info
+        run: |
+          echo "Repo1 simple tests triggered."
+          if [ -n "${{ github.event.inputs.triggered_by }}" ]; then
+            echo "Triggered by: ${{ github.event.inputs.triggered_by }}"
+          fi
+
+      # 7️⃣ Upload test report
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report
+          name: repo1-simple-report
           path: playwright-report/
           retention-days: 30
